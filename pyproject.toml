@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "lesson-32"
+version = "0.1.0"
+description = ""
+authors = ["Saken Myrzabekov <myrzabekovsaken89@gmail.com>"]
+readme = "README.md"
+packages = [{include = "lesson_32"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
