@@ -8,6 +8,9 @@ packages = [{include = "lesson_32"}]
 
 [tool.poetry.dependencies]
 python = "^3.10"
+pymongo = {extras = ["srv"], version = "^4.3.3"}
+python-dotenv = "^1.0.0"
+aiogram = "^2.25.1"
 
 
 [build-system]

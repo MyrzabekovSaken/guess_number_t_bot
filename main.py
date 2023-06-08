@@ -5,7 +5,7 @@ import random
 import logging
 from dotenv import load_dotenv
 import os
-logging.basicConfig(level=logging.INFO)
+from pymongo import MongoClient
 
 load_dotenv()
 
@@ -16,8 +16,13 @@ if not API_TOKEN:
 else:
     print("Api token is successfully loaded")
 
-
 logging.basicConfig(level=logging.INFO)
+
+def get_database():
+    MONGO_URL = os.getenv("MONGO_URL")
+    client = MongoClient(MONGO_URL)
+    return client["t-bot-result"]
+
 
 bot = Bot(token=API_TOKEN)
 storage = MemoryStorage()
@@ -25,17 +30,30 @@ dp = Dispatcher(bot, storage=storage)
 
 
 def load_scores():
-    try:
-        with open('scores.json', 'r') as file:
-            scores = json.load(file)
-    except (FileNotFoundError, json.decoder.JSONDecodeError):
+    database = get_database()
+    t_bot_result_collection = database["t-bot-result"]
+    t_bot_document = t_bot_result_collection.find_one({})
+    if t_bot_document:
+        scores = t_bot_document.get("data", {})
+    else:
         scores = {}
     return scores
 
+    # try:
+    #     with open('scores.json', 'r') as file:
+    #         scores = json.load(file)
+    # except (FileNotFoundError, json.decoder.JSONDecodeError):
+    #     scores = {}
+    # return scores
+
 
 def save_scores(scores):
-    with open('scores.json', 'w') as file:
-        json.dump(scores, file)
+    database = get_database()
+    t_bot_result_collection = database["t-bot-result"]
+    t_bot_result_collection.update_one({}, {"$set": {"data": scores}}, upsert=True)
+
+    # with open('scores.json', 'w') as file:
+    #     json.dump(scores, file)
 
 
 @dp.message_handler(commands=["start"])
@@ -51,7 +69,7 @@ async def guess(message: types.Message):
         scores[user_id] = {"score": 0, "attempts": 3}
         save_scores(scores)
         await message.reply("Welcome to the number guessing game! You have a score of 0 and you have 3 attempts to guess number.")
-
+        
     number = random.randint(1, 10)
     await message.reply("Guess a number between 1 and 10.")
 
@@ -95,3 +113,5 @@ async def guess_number(message: types.Message):
 
 if __name__ == '__main__':
     executor.start_polling(dp, skip_updates=True)
+    dbname = get_database()
+    result = dbname["t-bot-result"]
